@@ -1,6 +1,8 @@
 
 // The Stannon
 
+// A 3-label, second-order (O2; quadratic) model
+
 data {
     int<lower=1> P; // number of pixels
     int<lower=1> S; // number of training set stars
@@ -32,17 +34,19 @@ transformed data {
 
 parameters {
     vector[P] eps_variance; // the variance in each pixel
-    matrix[P, C] theta; // the spectral derivatives
+    // 10 is the number of terms for a quadratic model
+    matrix[P, 10] theta; // the spectral derivatives
     matrix[S, L] true_label; // the true label values 
 }
 
 transformed parameters {
-    matrix[S, C] DM; // design matrix
+    // 10 is the number of terms for a quadratic model
+    matrix[S, 10] DM; // design matrix
     matrix[S, P] y_err; // total uncertainties
 
     // Construct the design matrix from the labels
-    DM = rep_matrix(1.0, S, C);
-    for s in (1:S) {
+    DM = rep_matrix(1.0, S, 10);
+    for (s in 1:S) {
         DM[s, 2] = iso_label[s, 1]; // teff
         DM[s, 3] = iso_label[s, 2]; // logg
         DM[s, 4] = iso_label[s, 3]; // feh
@@ -54,7 +58,7 @@ transformed parameters {
         DM[s, 10] = iso_label[s, 2] * iso_label[s, 3]; // logg * feh
     }
     for (s in 1:S)
-        y_err[s] = sqrt(to_vector(y_var[s]) + eps_variance);
+        y_err[s] = sqrt(to_vector(y_var[s]) + eps_variance)';
 }
 
 model {
@@ -62,9 +66,9 @@ model {
 
     // priors on the labels
     for (l in 1:L)
-        labels[:, l] ~ normal(true_label[:, l], label_err[:, l]);
+        label[:, l] ~ normal(true_label[:, l], label_err[:, l]);
 
     // model the fluxes.
     for (s in 1:S)
-        y[s] ~ normal(theta * DM[s]', y_err);
+        y[s] ~ normal(theta * DM[s]', y_err[s]);
 }

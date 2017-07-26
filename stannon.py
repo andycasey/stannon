@@ -2,8 +2,8 @@
 from pystan import StanModel
 
 
+model = StanModel(file="cannon-3L-O2.stan")
 
-model = stan.StanModel(file="cannon.stan")
 
 
-model.optimizing(data=None)
+#model.optimizing(data=None)
