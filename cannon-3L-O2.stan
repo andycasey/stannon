@@ -69,6 +69,7 @@ model {
         label[:, l] ~ normal(true_label[:, l], label_err[:, l]);
 
     // model the fluxes.
-    for (s in 1:S)
+    for (s in 1:S) {
         y[s] ~ normal(theta * DM[s]', y_err[s]);
+    }
 }
